@@ -1,5 +1,6 @@
 package main;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -54,7 +55,7 @@ public class FileHandler {
 				System.out.println("Package sent with message: " + header);
 				Thread.sleep(500);
 				if(storedChunkConfirmation(rep_degree, file_n, i)) {
-					System.out.println("FILEMANAGER: obtained the desired repetition degree!");
+					System.out.println("Obtained the desired repetition degree!");
 					Peer.files_s.replace("confirmationCount", "0");
 					break;
 				}	
@@ -62,9 +63,63 @@ public class FileHandler {
 		}
 	}
 	
+	private void restore(String file_n) throws IOException {
+		String crlf = Peer.createCRLF();
+		HashMap<Integer, byte[]> file_map = new HashMap<Integer, byte[]>();
+		String header;
+		
+		int cnter = 0;
+		boolean state = true;
+		
+		while(state) {
+			
+			String cnter_string = String.valueOf(cnter);
+			
+			header = "GETCHUNK 1.0" + file_n + " " + cnter_string + " " + crlf + crlf;
+			
+			DatagramSocket dg_socket = new DatagramSocket();
+			DatagramPacket msg_packet = new DatagramPacket(header.getBytes(), header.getBytes().length, this.mc_addr, this.mc_port);
+			dg_socket.send(msg_packet);
+			
+			System.out.println("Packet sent with message: " + header);
+			
+			ChunkRestoration chunk = new ChunkRestoration(mdr_addr, mdr_port, file_n, cnter);
+			byte[] data = chunk.assignChunk();
+			file_map.put(cnter, data);
+			
+			if(data.length < 64000)
+				break;
+			
+			cnter++;
+		}
+		
+		chunksToFile(file_n, file_map);
+	}
+	
+	private void chunksToFile(String file_n, HashMap<Integer, byte[]> file_map) throws IOException {
+		
+		FileOutputStream data = new FileOutputStream(file_n);
+		
+		for(int i = 0; i < file_map.size(); i++) {
+			data.write(file_map.get(i));
+		}
+		data.close();
+	}
+	
 	public void sendConfirmation(String msg) throws IOException {
 		if(msg.startsWith("STORED"))
 			sendMC(msg);
+		else if(msg.startsWith("CHUNK"))
+			sendMDR(msg);
+	}
+	
+	public void sendMDR(String msg) throws IOException {
+		
+		DatagramSocket dg_socket = new DatagramSocket();
+		DatagramPacket msg_packet = new DatagramPacket(msg.getBytes(), msg.getBytes().length, this.mdr_addr, this.mdr_port);
+		dg_socket.send(msg_packet);
+		System.out.println("Peer sent packet with message: " + msg);
+		
 	}
 	
 	public void sendMC(String msg) throws IOException {
@@ -90,7 +145,7 @@ public class FileHandler {
 				e.printStackTrace();
 			}
 			
-			confirm_counter = Integer.parseInt(Peer.files_s.get("totalReceived"));
+			confirm_counter = Integer.parseInt(Peer.files_s.get("totalreceived"));
 			if(confirm_counter < rep_degree)
 				return false;
 			else

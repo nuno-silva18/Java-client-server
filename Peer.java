@@ -33,7 +33,7 @@ public class Peer {
 		files_s = new ConcurrentHashMap<>();
 		files_s.put("filename", " ");
 		files_s.put("chunknumber" , "0");
-		files_s.put("totalReceived", "0");
+		files_s.put("totalreceived", "0");
 		
 		String mc_addr = args[0];
 		int mc_port = Integer.parseInt(args[1]);

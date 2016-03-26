@@ -13,7 +13,7 @@ public class ConfirmMessageHandler extends Thread {
 	}
 	
 	public void run() {
-		if(!checking.equals(" "))
+		if(!checking.equals(""))
 			try {
 				confirm_socket.sendConfirmation(this.checking);
 			} catch (IOException e) {

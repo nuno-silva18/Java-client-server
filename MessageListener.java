@@ -60,7 +60,7 @@ public class MessageListener extends Thread {
 		
 		if(state)
 		{
-			int counter = Integer.parseInt(Peer.files_s.get("totalReceived"));
+			int counter = Integer.parseInt(Peer.files_s.get("totalreceived"));
 			counter++;
 			Peer.files_s.replace("totalReceived", String.valueOf(counter));
 		}	
