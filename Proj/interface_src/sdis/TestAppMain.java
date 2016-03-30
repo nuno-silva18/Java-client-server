@@ -53,12 +53,12 @@ public class TestAppMain extends Thread{
             }
             
             
-            System.out.print(message);
+            System.out.println(message);
             out.println(message);
                        
             // Get Reply and print it
             String reply = in.readLine(); //Only 1 message, so no loop
-            System.out.println(" [" + reply + "]");
+            System.out.println(">> " + reply);
                         
             server.close();
         }catch(Exception ex){
