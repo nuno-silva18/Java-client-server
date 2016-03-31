@@ -20,7 +20,6 @@ public class ChunkHandler {
         for(int j = 0; j < desired_rep_deg; j++){            
             byte[] pack = Peer.joinArray(header.getBytes(), body);
             DatagramPacket msg = new DatagramPacket(pack, pack.length, Peer.mdb_addr, Peer.mdb_port);
-            
             dg_socket.send(msg);
             System.out.println("Package sent with header: " + header);
             Thread.sleep(500);
@@ -38,8 +37,31 @@ public class ChunkHandler {
      * Fetches a chunk from storage,
      * announces it on the MC
      */
-    public void get(){
+    public byte[] getChunk(String header, String fileID, String chunkNO) throws SocketException, IOException, InterruptedException{
+        Peer.restore_fileID = fileID;
+        Peer.restore_chunkNO = chunkNO;
+        Peer.restore_wait = true;
         
+        DatagramSocket dg_socket = new DatagramSocket();
+        
+        //Send GETCHUNK every 500ms, until we get packet
+        do{
+            byte[] pack = header.getBytes();
+
+            DatagramPacket msg = new DatagramPacket(pack, pack.length, Peer.mc_addr, Peer.mc_port);            
+            dg_socket.send(msg);
+
+            //Check if we got the packed every 10ms
+            int count = 0;
+            do{
+                System.out.print(".");
+                count++;
+                Thread.sleep(10);            
+            }while(Peer.restore_wait && count < 50);
+        }while(Peer.restore_wait);
+        System.out.println();        
+        
+        return Peer.restore_data;
     }
     
     /*

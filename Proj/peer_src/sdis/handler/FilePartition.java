@@ -2,6 +2,7 @@ package sdis.handler;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.Arrays;
 import java.util.HashMap;
 
 public class FilePartition {
@@ -12,12 +13,15 @@ public class FilePartition {
 	HashMap<Integer, byte[]> file_map = new HashMap<>();
 	
 	private void makeFileMap(RandomAccessFile file, int max_buffer_size, int chunk_num) throws IOException {
-		int offset = chunk_num * max_buffer_size;
-		byte[] buff = new byte[max_buffer_size];
-		file.seek(offset);
-		file.read(buff, 0, max_buffer_size);
-		file_map.put(chunk_num, buff);
+            for(int i = 0; i < chunk_num; i++){
+                byte[] buff = new byte[max_buffer_size];
+                int readed = file.read(buff);
                 
+                //Trim Chunk
+                byte[] tbuff = Arrays.copyOf(buff, readed);
+                
+                file_map.put(i, tbuff);                
+            }
 	}
 	
 	public FilePartition(String file_n) throws IOException
@@ -32,9 +36,8 @@ public class FilePartition {
 		if(this.num_chunks < 1)
 			this.num_chunks = 1;
 		
-		for(int dest = 0; dest < this.num_chunks; dest++) {                    
-                    makeFileMap(this.file, this.max_buffer_size, dest);
-		}
+		           
+                makeFileMap(this.file, this.max_buffer_size, num_chunks);
 		
                 file.close();
 	}

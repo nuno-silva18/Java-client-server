@@ -24,6 +24,10 @@ public class Peer {
     
     public static HashMap<ChunkID, Chunk> tracked = new HashMap<>();
     public static HashMap<ChunkID, Chunk> stored = new HashMap<>();
+    public static String restore_fileID = "none";
+    public static String restore_chunkNO = "none";
+    public static byte[] restore_data = null;
+    public static boolean restore_wait = false;
 
     
     
