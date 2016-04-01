@@ -63,17 +63,63 @@ public class ChunkHandler {
         
         return Peer.restore_data;
     }
-    
-    /*
-     * Removes a socket from storage,
-     * announces it on the MC
-     */
-    public void remove(){
+
+    void reclaimSpace(int space) {
+        System.out.println("Reclaiming " + space + " Bytes");
         
-    }
-    
-    //Reclaims Space on the Storage
-    public void reclaimSpace(int space){
+        int toBeRemoved = space;
         
+        try{
+            DatagramSocket socket = new DatagramSocket();
+
+            //First Pass, remove chunks that exceed desired rep_degree
+            for(ChunkID it : Peer.stored.keySet()){
+                Chunk c = Peer.stored.get(it);
+
+                if(c.current_rep_deg > c.desired_rep_deg){
+                    Peer.stored.remove(it);
+                    System.out.printf("Removed Chunk : %s %d", it.fileID, it.chunkNO);
+                    
+                    toBeRemoved -= c.data.length;
+                    
+                    String header = "REMOVED 1.0 " + Peer.id + " " + c.id.fileID + " " + c.id.chunkNO + " " + Peer.createCRLF() + Peer.createCRLF();
+                    byte[] message = header.getBytes();
+                    DatagramPacket pack = new DatagramPacket(message, message.length, Peer.mc_addr, Peer.mc_port);
+                    socket.send(pack);
+                }
+                
+                //Stop if requested space has been removed
+                if(toBeRemoved<=0){
+                    break;
+                }
+            }
+            
+            //Second Pass, First Come, First Killed
+            if(toBeRemoved>0){
+                for(ChunkID it : Peer.stored.keySet()){
+                    Chunk c = Peer.stored.get(it);
+
+              
+                    Peer.stored.remove(it);
+                    System.out.printf("Removed Chunk : %s %d\n", it.fileID, it.chunkNO);
+
+                    toBeRemoved -= c.data.length;
+
+                    String header = "REMOVED 1.0 " + Peer.id + " " + c.id.fileID + " " + c.id.chunkNO + " " + Peer.createCRLF() + Peer.createCRLF();
+                    byte[] message = header.getBytes();
+                    DatagramPacket pack = new DatagramPacket(message, message.length, Peer.mc_addr, Peer.mc_port);
+                    socket.send(pack);
+  
+                    
+                    //Stop if requested space has been removed
+                    if(toBeRemoved<=0){
+                        break;
+                    }
+                }
+            }
+        }catch(Exception ex){
+            System.out.println("Error reclaiming space " + ex);
+            System.exit(1);
+        }
     }
 }

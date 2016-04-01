@@ -5,12 +5,12 @@ import sdis.handler.AccessPointHandler;
 import java.net.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import sdis.handler.Chunk;
 import sdis.handler.ChunkHandler;
 import sdis.handler.ChunkID;
 import sdis.handler.FileHandler;
-import sdis.multicast.MulticastDriver;
+import sdis.multicast.MultiCastDriver;
 
 // Parses the command line arguments and launches a Peer Server instance.
 public class Peer {
@@ -22,14 +22,19 @@ public class Peer {
     public static InetAddress mdr_addr;
     public static int         mdr_port;
     
-    public static HashMap<ChunkID, Chunk> tracked = new HashMap<>();
-    public static HashMap<ChunkID, Chunk> stored = new HashMap<>();
+    public static ConcurrentHashMap<ChunkID, Chunk> tracked = new ConcurrentHashMap<>();
+    public static ConcurrentHashMap<ChunkID, Chunk> stored = new ConcurrentHashMap<>();
     public static String restore_fileID = "none";
     public static String restore_chunkNO = "none";
     public static byte[] restore_data = null;
     public static boolean restore_wait = false;
+    
+    private static ChunkHandler chunkhandler;
 
     
+    public static ChunkHandler getCH(){
+        return chunkhandler;
+    }
     
     //Joins two byte arrays
     public static byte[] joinArray(byte[] a, byte[] b){
@@ -72,7 +77,7 @@ public class Peer {
     // Prints the CLI usage information
     public static void printUsage(){
         System.out.println("Usage:");
-        System.out.println("$ java Peer <svid> <mcca> <mccp> <mdba> <mdbp> <mdra> <mdrp>");
+        System.out.println("$ java sdis.Peer <svid> <mcca> <mccp> <mdba> <mdbp> <mdra> <mdrp>");
         System.out.println("      - <svid>      : Server ID");
         System.out.println("      - <mcca>      : [MC]  Multicast Control Channel Address");
         System.out.println("      - <mccp>      : [MC]  Multicast Control Channel Port");
@@ -119,10 +124,11 @@ public class Peer {
         
         
         // Start Control Classes
-        ChunkHandler chunkhandler = new ChunkHandler();
+        chunkhandler = new ChunkHandler();
         FileHandler filehandler = new FileHandler(chunkhandler);
         
-        MulticastDriver driver = new MulticastDriver();
+        MultiCastDriver driver = new MultiCastDriver();
+        driver.start();
         
         AccessPointHandler ci = new AccessPointHandler(id, filehandler, chunkhandler);
         ci.start();

@@ -3,14 +3,14 @@ package sdis.handler;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class FilePartition {
 	
 	RandomAccessFile file;
 	int num_chunks;
 	int max_buffer_size = 64000;
-	HashMap<Integer, byte[]> file_map = new HashMap<>();
+	ConcurrentHashMap<Integer, byte[]> file_map = new ConcurrentHashMap<>();
 	
 	private void makeFileMap(RandomAccessFile file, int max_buffer_size, int chunk_num) throws IOException {
             for(int i = 0; i < chunk_num; i++){
@@ -42,24 +42,8 @@ public class FilePartition {
                 file.close();
 	}
 	
-	public void printFileMap() {
-            System.out.print(file_map);
-	}
-	
-	public int getNumChunks() {
-            return num_chunks;
-	}
-	
-	public void setNumChunks(int num_chunks) {
-            this.num_chunks = num_chunks;
-	}
-	
-	public HashMap<Integer, byte[]> getFileMap() {
+	public ConcurrentHashMap<Integer, byte[]> getFileMap() {
             return file_map;
-	}
-	
-	public void setFileMap(HashMap<Integer, byte[]> file_map) {
-            this.file_map = file_map;
 	}
 }
 

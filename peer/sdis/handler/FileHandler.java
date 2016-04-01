@@ -2,12 +2,12 @@ package sdis.handler;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.concurrent.ConcurrentHashMap;
 import sdis.Peer;
 
 // Handles operations related to files, and applies respective actions to linked chunks
@@ -25,7 +25,7 @@ public class FileHandler {
      */
     public void backup(String file_n, int rep_degree) throws IOException, NoSuchAlgorithmException, SocketException, InterruptedException{
         String crlf =  Peer.createCRLF();
-        HashMap<Integer, byte[]> file_map;
+        ConcurrentHashMap<Integer, byte[]> file_map;
         
         
         FilePartition file_p = new FilePartition(file_n);
@@ -56,8 +56,8 @@ public class FileHandler {
             int count = 0; // Find how many chunks the file has
             String fileID = Peer.getFileID(filepath);
             
-            for(Iterator<ChunkID> it = Peer.tracked.keySet().iterator(); it.hasNext();){
-                if(it.next().fileID.equals(fileID)){
+            for(ChunkID it : Peer.tracked.keySet()){
+                if(it.fileID.equals(fileID)){
                     count++;
                 }
             }
@@ -91,6 +91,47 @@ public class FileHandler {
      * of said deletion
      */    
     public void delete(String filepath){
-        
+        try{
+            String fileID = Peer.getFileID(filepath);
+            String crlf =  Peer.createCRLF();            
+            String header = "DELETE 1.0 " + Peer.id + " " + fileID + crlf + crlf;
+            byte[] packdata = header.getBytes();
+            
+            //Perform Local Delete Prior to Other Peers
+            System.out.println("Removing Chunks for FileID: " + fileID);
+                
+            int tc = 0;
+            int sc = 0;
+
+            //Remove Tracking line Chunks
+            for (ChunkID it : Peer.tracked.keySet()) {
+                if(it.fileID.equals(fileID)){
+                    Peer.tracked.remove(it);
+                    tc++;
+                }
+            }  
+            System.out.printf("Removed %d Chunks from Tracking Line\n", tc);
+
+            //Remove Stored line Chunks
+            for (ChunkID it : Peer.stored.keySet()) {
+                if(it.fileID.equals(fileID)){
+                    Peer.stored.remove(it);
+                    sc++;
+                }
+            }  
+            System.out.printf("Removed %d Chunks from Storage Line\n", sc);
+            
+            
+            DatagramSocket dbs = new DatagramSocket();
+            System.out.println("Sending DELETE Messages...");
+            for(int i = 0; i < 5; i++){
+                System.out.printf("[%d]", i);
+                DatagramPacket pack = new DatagramPacket(packdata, packdata.length, Peer.mc_addr, Peer.mc_port);
+                dbs.send(pack);
+            } 
+            System.out.println();
+        }catch(Exception ex){
+            System.out.println("Error requesting DELETE " + ex);
+        }
     }
 }

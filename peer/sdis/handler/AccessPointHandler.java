@@ -75,7 +75,7 @@ public class AccessPointHandler extends Thread{
                         //Launch Space Reclaim on Peer
                         ch.reclaimSpace(space);
                         
-                        result_message = String.format("Peer will now reclaim %d SPACEUNITS", space);
+                        result_message = String.format("Peer will now reclaim up to %d Bytes", space);
                     }else{
                         result_message = "Unknown Sub Protocol Command";
                     }

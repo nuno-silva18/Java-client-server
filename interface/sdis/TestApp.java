@@ -18,7 +18,7 @@ public class TestApp {
     // Prints the CLI usage information
     public static void printUsage(){
         System.out.println("Usage:");
-        System.out.println("$ java TestApp <peer_ap> <sub_protocol> <opnd_1> <opnd_2>");
+        System.out.println("$ java sdis.TestApp <peer_ap> <sub_protocol> <opnd_1> <opnd_2>");
         System.out.println("      - <peer_ap>      : The peer's access point, identified by host:port, "
                 + "defaults to localhost if host is not provided.");
         System.out.println("      - <sub_protocol> : The subprotocol to be executed by the peer");
